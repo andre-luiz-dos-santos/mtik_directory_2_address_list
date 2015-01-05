@@ -31,7 +31,13 @@ module MtikDirectory2AddressList
       before = nil
       loop do sleep(1)
         next if before == (after = mtime)
-        yield(Hash[list.to_a]) ; before = after
+        yield ; before = after
+      end
+    end
+
+    def self.watch(path)
+      self.new(path:path).tap do |dir|
+        dir.watch { yield(Hash[dir.list.to_a]) }
       end
     end
 

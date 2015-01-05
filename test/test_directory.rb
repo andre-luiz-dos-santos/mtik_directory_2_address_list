@@ -18,38 +18,46 @@ describe "OS" do
   end
 end
 
-describe "Directory" do
-  describe "sample-1" do
-    let :path do
-      "/tmp/sample-1"
-    end
+module MtikDirectory2AddressList
+  describe "Directory" do
+    describe "sample-1" do
+      let :path do
+        "/tmp/sample-1"
+      end
 
-    before do
-      FileUtils.mkdir(path)
-      Dir.chdir(path) do
-        FileUtils.touch(%w(ignored 9.8.7.6))
-        File.symlink("account-name-1", "1.2.3.4")
-        File.symlink("account-name-2", "1.2.3.5")
+      before do
+        FileUtils.mkdir(path)
+        Dir.chdir(path) do
+          FileUtils.touch(%w(ignored 9.8.7.6))
+          File.symlink("account-name-1", "1.2.3.4")
+          File.symlink("account-name-2", "1.2.3.5")
+        end
+      end
+
+      after do
+        FileUtils.rm_rf(path)
+      end
+
+      it "should list two links" do
+        res = Directory.new(path:path).list
+        assert_equal([%w(1.2.3.4 account-name-1), %w(1.2.3.5 account-name-2)], res.to_a)
+      end
+
+      it "should yield on different mtime" do
+        dir = Directory.new(path:path)
+        dir.stubs(:sleep)
+        dir.stubs(:loop).multiple_yields(*4.times)
+        dir.stubs(:mtime).returns(10, 10, 20, 20)
+        Directory.expects(:new).with(path:path).returns(dir)
+        times = 0
+        Directory.watch(path) do |dem| # Directory Entries Map
+          assert_equal({'1.2.3.4' => 'account-name-1', '1.2.3.5' => 'account-name-2'}, dem)
+          times += 1
+        end
+        # 'watch' should yield first right after starting,
+        # and then a second time when the 'mtime' changes.
+        assert_equal(2, times)
       end
     end
-
-    after do
-      FileUtils.rm_rf(path)
-    end
-
-    it "should list one link" do
-      res = MtikDirectory2AddressList::Directory.new(path:path).list
-      assert_equal([%w(1.2.3.4 account-name-1), %w(1.2.3.5 account-name-2)], res.to_a)
-      assert_equal({'1.2.3.4' => 'account-name-1', '1.2.3.5' => 'account-name-2'}, Hash[res.to_a])
-    end
-  end
-
-  it "should yield on different mtime" do
-    d = MtikDirectory2AddressList::Directory.new(path:"/tmp")
-    d.stubs(:sleep)
-    d.stubs(:loop).multiple_yields(*4.times)
-    d.stubs(:mtime).returns(10, 10, 20, 20)
-    times = 0 ; d.watch { times += 1 }
-    assert_equal(2, times)
   end
 end
