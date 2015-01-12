@@ -63,6 +63,4 @@ class Main
   end
 end
 
-if __FILE__ == $PROGRAM_NAME
-  Main.new
-end
+Main.new
