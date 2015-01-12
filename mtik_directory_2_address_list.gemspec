@@ -8,8 +8,7 @@ Gem::Specification.new do |spec|
   spec.version       = MtikDirectory2AddressList::VERSION
   spec.authors       = ['Andre Luiz dos Santos']
   spec.email         = ['andre.netvision.com.br@gmail.com']
-  spec.summary       = %q{Synchronize a directory with a Mikrotik address list.}
-  spec.license       = 'MIT'
+  spec.summary       = %q{Synchronize a directory with a Mikrotik address list}
 
   spec.files         = `git ls-files -z`.split("\x0")
   spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
