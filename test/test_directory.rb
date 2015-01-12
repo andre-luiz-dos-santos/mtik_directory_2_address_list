@@ -1,7 +1,6 @@
 # coding: utf-8
 require 'simplecov'
 gem 'minitest'
-gem 'mocha'
 require 'minitest/autorun'
 require 'mocha/setup'
 require 'mtik_directory_2_address_list'

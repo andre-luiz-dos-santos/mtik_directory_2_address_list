@@ -1,3 +1,4 @@
+# coding: utf-8
 
 module MtikDirectory2AddressList
   class Directory

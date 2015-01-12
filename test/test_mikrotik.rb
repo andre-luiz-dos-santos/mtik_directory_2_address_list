@@ -1,9 +1,6 @@
 # coding: utf-8
-
 require 'simplecov'
-
 gem 'minitest'
-gem 'mocha'
 require 'minitest/autorun'
 require 'mocha/setup'
 require 'mtik_directory_2_address_list'
@@ -12,8 +9,12 @@ begin
   file = File.join(File.dirname(__FILE__), 'mikrotik.eval')
   $mtik_params = eval(IO.read(file))
 rescue => err
+  puts '*' * 79
   puts "Cannot read Mikrotik configuration file: #{err}"
+  puts ''
+  puts "Create a file named mikrotik.eval for testing the Mikrotik code."
   puts "Example: {host:'10.9.8.7', user:'login', pass:'123', prefix:'download_speed_'}"
+  puts '*' * 79
 else
   module MtikDirectory2AddressList
     describe "Mikrotik" do
