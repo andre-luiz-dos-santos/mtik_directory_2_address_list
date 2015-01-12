@@ -12,7 +12,21 @@ class Args < OptionParser
     on('-p', '--prefix PREFIX', "Mikrotik address-list prefix (default: #{@prefix = 'md2al_'})") { |str| @prefix = str }
     on('-q', '--quiet', "Be quiet (default: #{@quiet = false})") { |bool| @quiet = bool }
     parse!
-    if ARGV.size != 4
+    if ARGV.empty?
+      STDOUT << to_s << <<-EOS.gsub(/^ +/, '')
+
+        Symbolic links in <dir>, named like an IP address, will be
+        sent to the Mikrotik device at <host>. The address-list name
+        will be formed by the PREFIX + whatever the link points to.
+
+        For example, the following symbolic link:
+        \t1.2.3.4 -> 15mbps
+        With --prefix set to "down_speed_", will add the IP 1.2.3.4,
+        to the address-list named down_speed_15mbps.
+
+      EOS
+      exit(2)
+    elsif ARGV.size != 4
       puts to_s
       puts "Missing required argument"
       exit(2)
