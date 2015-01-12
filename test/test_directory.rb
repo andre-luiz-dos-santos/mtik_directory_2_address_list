@@ -1,10 +1,10 @@
-# encoding: utf-8
-
+# coding: utf-8
+require 'simplecov'
 gem 'minitest'
 gem 'mocha'
 require 'minitest/autorun'
 require 'mocha/setup'
-require 'mtik_directory_2_address_list/directory'
+require 'mtik_directory_2_address_list'
 
 describe "OS" do
   # man READLINK(2) says:
@@ -47,7 +47,7 @@ module MtikDirectory2AddressList
         dir = Directory.new(path:path)
         dir.stubs(:sleep)
         dir.stubs(:loop).multiple_yields(*4.times)
-        dir.stubs(:mtime).returns(10, 10, 20, 20)
+        File.stubs(:mtime).with(path).returns(10, 10, 20, 20)
         Directory.expects(:new).with(path:path).returns(dir)
         times = 0
         Directory.watch(path) do |dem| # Directory Entries Map

@@ -1,0 +1,68 @@
+# coding: utf-8
+require 'optparse'
+require 'syslog'
+require 'mtik_directory_2_address_list'
+
+class Args < OptionParser
+  attr_reader :prefix, :quiet
+  attr_reader :dir, :mtik
+
+  def initialize
+    super 'Usage: <dir> <host> <user> <pass>'
+    on('-p', '--prefix PREFIX', "Mikrotik address-list prefix (default: #{@prefix = 'md2al_'})") { |str| @prefix = str }
+    on('-q', '--quiet', "Be quiet (default: #{@quiet = false})") { |bool| @quiet = bool }
+    parse!
+    if ARGV.size != 4
+      puts to_s
+      puts "Missing required argument"
+      exit(2)
+    else
+      @dir = ARGV.shift
+      @mtik = Hash[[:host, :user, :pass].zip(ARGV.shift(3))]
+    end
+  rescue OptionParser::ParseError => err
+    puts to_s
+    puts "Error: #{err}"
+    exit(2)
+  end
+end
+
+class Main
+  def initialize
+    args
+    sync
+  end
+
+  def args
+    @args ||= Args.new.tap do |args|
+      Syslog.open($PROGRAM_NAME, Syslog::LOG_PID, Syslog::LOG_DAEMON)
+      args.quiet || MtikDirectory2AddressList::Log.output(&method(:info))
+    end
+  end
+
+  def sync
+    MtikDirectory2AddressList.sync(args.dir, args.mtik, args.prefix)
+  rescue => err
+    err("Error: #{err} [#{err.backtrace.first}]")
+    sleep(30) ; retry
+  end
+
+  # Send +message+ to syslog and STDERR.
+  # @param [String] message
+  # @return [void]
+  def err(message)
+    Syslog.err('%s', message)
+    STDERR << message << "\n" if STDERR.tty?
+  end
+
+  # Send +message+ to STDOUT.
+  # @param [String] message
+  # @return [void]
+  def info(message)
+    STDOUT << message << "\n" if STDOUT.tty?
+  end
+end
+
+if __FILE__ == $PROGRAM_NAME
+  Main.new
+end
