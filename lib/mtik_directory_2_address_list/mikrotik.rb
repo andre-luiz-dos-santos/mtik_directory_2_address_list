@@ -3,9 +3,9 @@ require 'mtik'
 
 module MtikDirectory2AddressList
   class Mikrotik
-    class Error < StandardError ; end
-    class RouterError < StandardError ; end
-    class SyncError < StandardError ; end
+    Error = Class.new(StandardError)
+    RouterError = Class.new(Error)
+    SyncError = Class.new(Error)
 
     def initialize(params)
       @prefix = (params[:prefix] || 'md2al_')
