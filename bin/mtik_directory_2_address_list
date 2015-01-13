@@ -73,7 +73,7 @@ class Main
   # @param [String] message
   # @return [void]
   def info(message)
-    STDOUT << message << "\n" if STDOUT.tty?
+    STDOUT << message << "\n"
   end
 end
 
