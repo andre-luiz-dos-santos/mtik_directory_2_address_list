@@ -24,15 +24,13 @@ module MtikDirectory2AddressList
     # @param [String] ip
     #
     # @return [String] The address list associated with +ip+
-    # @return [nil] When the +ip+ is not found
+    # @return [nil] When the +ip+ is not found or is not a symbolic link
     def [](ip)
       (ip =~ IP_RE) || raise(Error, "Invalid IP [#{ip}]")
       file = File.join(@path, ip)
       File.readlink(file)
-    rescue Errno::ENOENT
-      nil
-    rescue Errno::EINVAL
-      raise(Error, "IP [#{ip}] is not a symlink [#{file}]")
+    rescue Errno::ENOENT, Errno::EINVAL
+      nil # symlink deleted, not a symlink
     end
 
     # Enumerate IPs associated with an address list.
