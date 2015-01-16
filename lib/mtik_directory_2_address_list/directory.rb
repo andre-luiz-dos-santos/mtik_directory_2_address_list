@@ -2,9 +2,15 @@
 
 module MtikDirectory2AddressList
   class Directory
+    Error = Class.new(StandardError)
+
+    # The {#list} method will not enumerate symbolic links that do not match this regular expression.
+    # Other methods may raise Error.
+    IP_RE = %r{ \A \d{1,3} \. \d{1,3} \. \d{1,3} \. \d{1,3} \z }x
+
     # Manage a directory of symbolic links.
     #
-    # The IP address is the name of a symlink link in +@path+.
+    # The IP address is the name of the symbolic link.
     # The address list name is what the symbolic link points to.
     #
     # @param [Hash] params
@@ -13,23 +19,23 @@ module MtikDirectory2AddressList
       @path = params[:path]
     end
 
-    # Return the address list associated with the specified IP.
+    # Return the address list associated with +ip+.
     #
-    # @param [String] ip The IP to search for
+    # @param [String] ip
     #
-    # @return [String] The value associated with +ip+
+    # @return [String] The address list associated with +ip+
     # @return [nil] When the +ip+ is not found
     def [](ip)
-      File.readlink(File.join(@path, ip))
+      (ip =~ IP_RE) || raise(Error, "Invalid IP [#{ip}]")
+      file = File.join(@path, ip)
+      File.readlink(file)
+    rescue Errno::ENOENT
+      nil
     rescue Errno::EINVAL
-      nil # Not a symlink
+      raise(Error, "IP [#{ip}] is not a symlink [#{file}]")
     end
 
-    # The {#list} method will not enumerate symbolic links that do not match this regular expression.
-    # The {#[]} method will read any symbolic link, even if its name does not match this regular expression.
-    IP_RE = %r{ \A \d{1,3} \. \d{1,3} \. \d{1,3} \. \d{1,3} \z }x
-
-    # Enumerates every IP in +@path+.
+    # Enumerate IPs associated with an address list.
     #
     # @return [Enumerator] Arrays with: IP, address list
     def list
@@ -40,11 +46,14 @@ module MtikDirectory2AddressList
       end
     end
 
-    # Yield whenever +@path+ is modified.
+    # Yield whenever an association is modified.
+    #
+    # This is based on the mtime of the directory being watched.
+    # If the mtime is not updated when a symbolic link is changed,
+    # the directory must be touched manually.
     #
     # @yield Right after being called
-    # @yield After every update to +@path+
-    #
+    # @yield After every association update
     # @return [void]
     def watch
       before = nil
@@ -54,12 +63,11 @@ module MtikDirectory2AddressList
       end
     end
 
-    # Watch +path+, and yield +list+ as a hash.
+    # Like the instance method {#watch}, but yield a Hash with the associations.
     #
     # @param [String] path The directory to watch for modifications
     #
     # @yieldparam Hash{String=>String} Map IP addresses to address list names
-    #
     # @return [void]
     def self.watch(path)
       dir = self.new(path:path)

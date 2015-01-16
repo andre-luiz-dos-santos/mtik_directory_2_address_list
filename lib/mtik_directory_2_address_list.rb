@@ -12,7 +12,7 @@ module MtikDirectory2AddressList
   # @param [String] src The directory where to look for symbolic links
   # @param [Hash] dst The object passed to the +mtik+ gem (keys: +host+, +user+, +pass+)
   # @param [String] prefix The prefix an address list name must have for it to be used
-  # @return [nil]
+  # @return [void]
   def sync(src, dst, prefix = "dir_")
     Log.info { "Synchronizing [#{src}] with router at [#{dst[:host]}]" }
     mtik = Mikrotik.new(dst.dup.merge(prefix:prefix))
